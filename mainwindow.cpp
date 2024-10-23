@@ -102,24 +102,24 @@ void calculate(QGraphicsScene *scene){
             switch (i) {
             case 0:
                 scene->addLine(
-                    QLineF(0, 0, x, y),
+                    QLineF(x, y, x, y),
                     QPen(Qt::red, 5)
                     );
                 break;
             case 1:
                 scene->addLine(
-                    QLineF(0, 0, x, y),
+                    QLineF(x, y, x, y),
                     QPen(Qt::blue, 3)
                     );
             case 2:
                 scene->addLine(
-                    QLineF(0, 0, x, y),
+                    QLineF(x, y, x, y),
                     QPen(Qt::green, 2)
                     );
             case 3:
                 scene->addLine(
-                    QLineF(0, 0, x, y),
-                    QPen(Qt::yellow, 1)
+                    QLineF(x, y, x, y),
+                    QPen(Qt::black, 3)
                     );
                 break;
             }
