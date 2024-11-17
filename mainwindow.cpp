@@ -7,78 +7,121 @@
 #include <algorithm>
 #include <random>
 #include <typeinfo>
+
+#include <QLogValueAxis>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QChart>
+#include <QChartView>
+#include <QStackedWidget>
+#include <Qt>
+
+
 using namespace std;
+using namespace QtCharts;
+
 
 const long MASLEN_A = 786432 * 8 * 10;  // 6 MB массив
 const long MASLEN_B = 786432 * 8 * 10 * 8;
 const long ELEMINPIXEL_A = (126000);
 const long ELEMINPIXEL_B = (126000)*8;
-const long SIZEMULTIPLIER = 50;
+const long SCALE = 500;
 const long INDENT = 600;
 
-// Глобальный массив
+
+long long sum = 0;
+vector <int> index_arr (MASLEN_B);
+
+
 
 template<class T>
-void initMas(T a[], int length) {
+void initArr(T a[], int length) {
     for (int i = 0; i < length; i++) {
         a[i] = rand() % 11;
+
     }
 }
 
 template<class T>
-void directPas(T a[], int length) {
+void directTraversal(T a[], int length) {
     long long sum = 0;
+    long int ii = 0;
     for (int i = 0; i < length; i++) {
         sum += a[i];
+        if (ii == length){
+            break;
+        }
+        ii++;
     }
-    cout << "Sum direct: " << sum << endl;
+
+    cout << "Sum of direct traversal: " << sum << endl;
 }
 
 template<class T>
-void reversePas(T a[], int length) {
+void reverseTraversal(T a[], int length) {
     long long sum = 0;
+    long int ii = 0;
     for (int i = length-1; i >= 0; i--) {
         sum += a[i];
+        if (ii == length){
+            break;
+        }
+        ii++;
     }
-    cout << "Sum reverse: " << sum << endl;
+    cout << "Sum of reverse traversal: " << sum << endl;
 }
 
 template<class T>
-void stepPas(T a[], int length) {
+void stepTraversal(T a[], int length) {
     long long sum = 0;
+    long int ii = 0;
     for (int i = 0; i < length; i += 1) {
-        int index = i % length;  // Используем остаток для сдвига по массиву
-        sum += a[index];         // Суммируем элементы массива
+        int index = i % length;
+        sum += a[index];
+        if (ii == length){
+            break;
+        }
+        ii++;
+
     }
-    cout << "Sum step: " << sum << endl;
+    cout << "Sum of stepped traversal: " << sum << endl;
 }
 
 template<class T>
-void randomPas(T a[], int length) {
-    long long sum = 0;
+void randomTraversal(T a[], int length) {
 
-    // Создаем вектор индексов от 0 до length-1
-    vector<int> indices(length);
-    for (int i = 0; i < length; i++) {
-        indices[i] = i;
+    int ii = 0;
+    for (int i: index_arr) {
+        if (ii == length){
+            break;
+        }
+        sum += a[i];
+        ii++;
     }
 
-    // Перемешиваем индексы (алгоритм Фишера-Йетса)
-    random_device rd;   // Для генерации случайного числа
-    mt19937 g(rd());    // Создаем генератор случайных чисел
-    shuffle(indices.begin(), indices.end(), g);
-
-    // Обход массива по случайным индексам
-    for (int i = 0; i < length; i++) {
-        sum += a[indices[i]];  // Доступ к элементам по случайным индексам
-    }
-
-    cout << "Sum rand: " << sum << endl;
+    cout << "Sum of rand traversal: " << sum << endl;
 }
 
-void calculateA(QGraphicsScene *scene){
+void drawChart(QChartView *view, QLineSeries *seriesDirect, QLineSeries *seriesReverse, QLineSeries *seriesStep, QLineSeries *seriesRandom){
+    cout << "add series" <<endl;
+    view->chart()->removeAllSeries();
+    view->chart()->addSeries(seriesDirect);
+    view->chart()->addSeries(seriesReverse);
+    view->chart()->addSeries(seriesStep);
+    view->chart()->addSeries(seriesRandom);
+    cout << "set axis" <<endl;
+    view->chart()->createDefaultAxes();
+    view->chart()->axes(Qt::Horizontal).back()->setRange(0, 250);
+    view->chart()->axes(Qt::Vertical).back()->setRange(0, 800);
+    view->chart()->axes(Qt::Horizontal).back()->setTitleText("q []");
+    view->chart()->axes(Qt::Vertical).back()->setTitleText("t [сек]");
+    cout << "finished" <<endl;
+}
+
+
+void calculateA(QLineSeries *seriesDirectA, QLineSeries *seriesReverseA, QLineSeries *seriesStepA, QLineSeries *seriesRandomA){
     double previuosValueOfTime[4] = {0,0,0,0};
-    void (*functions_A[4])(long long a[], int length) = {directPas, reversePas, stepPas, randomPas};
+    void (*functions_A[4])(long long a[], int length) = {directTraversal, reverseTraversal, stepTraversal, randomTraversal};
     long startElements = 10000000;
     clock_t startTime;
     clock_t endTime;
@@ -87,65 +130,50 @@ void calculateA(QGraphicsScene *scene){
     qreal x2;
     qreal y1;
     qreal x1;
+//    view->chart()->setTitle("Graphic A");
+    static long long arr[MASLEN_A];
 
-    static long long a[MASLEN_A];
-
-    initMas<long long>(a, MASLEN_A);
-    int i;
+    initArr<long long>(arr, MASLEN_A);
     for(long elements = startElements; elements < MASLEN_A; elements += 10000000){
-        i = 0;
-        for(void (*curFunc)(long long a[], int length) : functions_A){
+        for(int i = 0; i < 4; i++){
             startTime = clock();
-            //printf("%d/n",i);
-            curFunc(a, elements);
+            functions_A[i](arr, elements);
             endTime = clock();
             seconds = (double)(endTime - startTime) / CLOCKS_PER_SEC;
-            y1 = -16 * previuosValueOfTime[i] * SIZEMULTIPLIER;
-            x1 = ((elements - 10000000) / ELEMINPIXEL_A);
-            y2 = -16 * seconds * SIZEMULTIPLIER;
-            x2 = (elements / ELEMINPIXEL_A);
-
+            y1 = 16 * previuosValueOfTime[i] * SCALE;
+            x1 = (elements - 10000000) / ELEMINPIXEL_A;
+            y2 = 16 * seconds * SCALE;
+            x2 = elements / ELEMINPIXEL_A;
+            cout << "(" << x1 << "," << y1 << ")" << "(" <<x2 << "," << y2 << ")" << endl;
             switch (i) {
             case 0:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::red, 2)
-                    );
+                seriesDirectA->append(QPointF(x1, y1));
+                seriesDirectA->append(QPointF(x2, y2));
                 break;
             case 1:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::green, 2)
-                    );
+                seriesReverseA->append(QPointF(x1, y1));
+                seriesReverseA->append(QPointF(x2, y2));
                 break;
             case 2:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::blue, 2)
-                    );
+                seriesStepA->append(QPointF(x1, y1));
+                seriesStepA->append(QPointF(x2, y2));
                 break;
             case 3:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::yellow, 2)
-                    );
+                seriesRandomA->append(QPointF(x1, y1));
+                seriesRandomA->append(QPointF(x2, y2));
                 break;
             }
-            scene->addLine(
-                QLineF(x2, y2, x2, y2),
-                QPen(Qt::black, 5)
-                );
 
             previuosValueOfTime[i] = seconds; // запись времени для каждого метода
             //printf("The long long time: %f seconds\n", seconds,typeid(curFunc).name());
-            i++;
         }
+
     }
 
 }
-void calculateB(QGraphicsScene *scene){
+void calculateB(QLineSeries *seriesDirectB, QLineSeries *seriesReverseB, QLineSeries *seriesStepB, QLineSeries *seriesRandomB){
     double previuosValueOfTime[4] = {0,0,0,0};
-    void (*functions_B[4])(char a[], int length) = {directPas, reversePas, stepPas, randomPas};
+    void (*functions_B[4])(char a[], int length) = {directTraversal, reverseTraversal, stepTraversal, randomTraversal};
     long startElements = 200;
     clock_t startTime;
     clock_t endTime;
@@ -155,83 +183,101 @@ void calculateB(QGraphicsScene *scene){
     qreal y1;
     qreal x1;
 
+
     static char a[MASLEN_B];
 
-    initMas<char>(a, MASLEN_B);
-    int i;
+    initArr<char>(a, MASLEN_B);
     for(long elements = startElements; elements < MASLEN_B; elements = elements * 2){
-        i = 0;
-        for(void (*curFunc)(char a[], int length) : functions_B){
+        for(int i = 0; i < 4; i++){
             startTime = clock();
             //printf("%d/n",i);
-            curFunc(a, elements);
+            functions_B[i](a, elements);
             endTime = clock();
             seconds = (double)(endTime - startTime) / CLOCKS_PER_SEC;
-            y1 = (-16 * previuosValueOfTime[i] * SIZEMULTIPLIER);
-            x1 = ((elements / 2) / ELEMINPIXEL_B)+INDENT;
-            y2 = -16 * seconds * SIZEMULTIPLIER;
-            x2 = (elements / ELEMINPIXEL_B)+INDENT;
+            y1 = (16 * previuosValueOfTime[i])*SCALE;
+            x1 = elements / 2/ELEMINPIXEL_B;
+            y2 = 16 * seconds * SCALE;
+            x2 = elements / ELEMINPIXEL_B;
 
             switch (i) {
             case 0:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::red, 2)
-                    );
+                seriesDirectB->append(QPointF(x2, y2));
+                seriesDirectB->append(QPointF(x2, y2));
                 break;
             case 1:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::green, 2)
-                    );
+                seriesReverseB->append(QPointF(x1, y1));
+                seriesReverseB->append(QPointF(x2, y2));
                 break;
             case 2:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::blue, 2)
-                    );
+                seriesStepB->append(QPointF(x1, y1));
+                seriesStepB->append(QPointF(x2, y2));
                 break;
             case 3:
-                scene->addLine(
-                    QLineF(x1, y1, x2, y2),
-                    QPen(Qt::yellow, 2)
-                    );
+                seriesRandomB->append(QPointF(x1, y1));
+                seriesRandomB->append(QPointF(x2, y2));
                 break;
             }
-            scene->addLine(
-                QLineF(x2, y2, x2, y2),
-                QPen(Qt::black, 5)
-                );
-
             previuosValueOfTime[i] = seconds; // запись времени для каждого метода
             //printf("The long long time: %f seconds\n", seconds,typeid(curFunc).name());
-            i++;
         }
+
     }
 }
 
-void drawAxis(QGraphicsScene *scene){
-    scene->addLine(0,0,500,0,QPen(Qt::black, 4));
-    scene->addLine(0,0,0,-500,QPen(Qt::black, 4));
-    scene->addLine(600,0,1100,0,QPen(Qt::black, 4));
-    scene->addLine(600,0,600,-500,QPen(Qt::black, 4));
+
+
+
+void shufleIndex(){
+    for (int i = 0; i < MASLEN_B; i++) {
+        index_arr[i] = i;
+    }
+
+
+    random_shuffle(index_arr.begin(), index_arr.end());
 }
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    scene = new QGraphicsScene();
-    ui->graphicsView->setScene(scene);
 
-    drawAxis(scene);
-    calculateA(scene);
-    calculateB(scene);
+    this->series_init();
+
+
+
+    calculateA(seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
+    drawChart(this->chartViewA, seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
+    calculateB(seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
+    drawChart(this->chartViewB, seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
+    setCentralWidget(chartViewA);
+
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+
+
+
+
+void MainWindow::keyPressEvent(QKeyEvent *e)
+{
+    if(e->key() == Qt::Key_A){
+        cout << "Left button" <<endl;
+        QWidget *savedWidget = centralWidget();
+        savedWidget->setParent(0);
+        setCentralWidget(this->chartViewB);
+    }
+    if(e->key() == Qt::Key_D){
+        cout << "Right button" <<endl;
+        QWidget* savedWidget = centralWidget();
+        savedWidget->setParent(0);
+        setCentralWidget(this->chartViewA);
+    }
 }
 
