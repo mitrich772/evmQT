@@ -3,10 +3,12 @@
 
 #include <QMainWindow>
 #include <QChart>
+#include <QLayout>
 #include <QKeyEvent>
 #include <QChart>
 #include <QChartView>
 #include <QLineSeries>
+#include <QLayoutItem>
 
 using namespace QtCharts;
 
@@ -21,8 +23,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    QChartView *chartViewA = new QChartView();
-    QChartView *chartViewB = new QChartView();
+    QChartView *chartViewA_1 = new QChartView();
+    QChartView *chartViewA_2 = new QChartView();
+    QChartView *chartViewB_1 = new QChartView();
+    QChartView *chartViewB_2 = new QChartView();
 
 
     QLineSeries *seriesDirectA = new QLineSeries();
@@ -34,6 +38,8 @@ public:
     QLineSeries *seriesReverseB = new QLineSeries();
     QLineSeries *seriesStepB = new QLineSeries();
     QLineSeries *seriesRandomB = new QLineSeries();
+
+
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
@@ -50,7 +56,20 @@ private:
         seriesStepB->setName("step");
         seriesRandomB->setName("random");
     }
-
+    void clearLayout(QLayout *layout, bool deleteWidgets = true)
+    {
+        while (QLayoutItem* item = layout->takeAt(0))
+        {
+            if (deleteWidgets)
+            {
+                if (QWidget* widget = item->widget())
+                    widget->deleteLater();
+            }
+            if (QLayout* childLayout = item->layout())
+                clearLayout(childLayout, deleteWidgets);
+            delete item;
+        }
+    }
 
 };
 #endif // MAINWINDOW_H

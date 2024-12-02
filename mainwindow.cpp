@@ -102,19 +102,27 @@ void randomTraversal(T a[], int length) {
     cout << "Sum of rand traversal: " << sum << endl;
 }
 
-void drawChart(QChartView *view, QLineSeries *seriesDirect, QLineSeries *seriesReverse, QLineSeries *seriesStep, QLineSeries *seriesRandom){
+
+
+void drawChart(QChartView *view_1, QChartView *view_2, QLineSeries *seriesDirect, QLineSeries *seriesReverse, QLineSeries *seriesStep, QLineSeries *seriesRandom){
     cout << "add series" <<endl;
-    view->chart()->removeAllSeries();
-    view->chart()->addSeries(seriesDirect);
-    view->chart()->addSeries(seriesReverse);
-    view->chart()->addSeries(seriesStep);
-    view->chart()->addSeries(seriesRandom);
+    view_1->chart()->removeAllSeries();
+    view_1->chart()->addSeries(seriesDirect);
+    view_1->chart()->addSeries(seriesReverse);
+
+    view_2->chart()->removeAllSeries();
+    view_2->chart()->addSeries(seriesStep);
+    view_2->chart()->addSeries(seriesRandom);
+
     cout << "set axis" <<endl;
-    view->chart()->createDefaultAxes();
-    view->chart()->axes(Qt::Horizontal).back()->setRange(0, 250);
-    view->chart()->axes(Qt::Vertical).back()->setRange(0, 800);
-    view->chart()->axes(Qt::Horizontal).back()->setTitleText("q []");
-    view->chart()->axes(Qt::Vertical).back()->setTitleText("t [сек]");
+    view_1->chart()->createDefaultAxes();
+    view_2->chart()->createDefaultAxes();
+//    view->chart()->axes(Qt::Horizontal).back()->setRange(0, 1000);
+//    view->chart()->axes(Qt::Vertical).back()->setRange(0, 1500);
+    view_1->chart()->axes(Qt::Horizontal).back()->setTitleText("q []");
+    view_1->chart()->axes(Qt::Vertical).back()->setTitleText("t [сек]");
+    view_2->chart()->axes(Qt::Horizontal).back()->setTitleText("q []");
+    view_2->chart()->axes(Qt::Vertical).back()->setTitleText("t [сек]");
     cout << "finished" <<endl;
 }
 
@@ -140,10 +148,10 @@ void calculateA(QLineSeries *seriesDirectA, QLineSeries *seriesReverseA, QLineSe
             functions_A[i](arr, elements);
             endTime = clock();
             seconds = (double)(endTime - startTime) / CLOCKS_PER_SEC;
-            y1 = 16 * previuosValueOfTime[i] * SCALE;
-            x1 = (elements - 10000000) / ELEMINPIXEL_A;
-            y2 = 16 * seconds * SCALE;
-            x2 = elements / ELEMINPIXEL_A;
+            y1 = previuosValueOfTime[i];
+            x1 = (elements - 10000000);
+            y2 = seconds;
+            x2 = elements;
             cout << "(" << x1 << "," << y1 << ")" << "(" <<x2 << "," << y2 << ")" << endl;
             switch (i) {
             case 0:
@@ -194,10 +202,10 @@ void calculateB(QLineSeries *seriesDirectB, QLineSeries *seriesReverseB, QLineSe
             functions_B[i](a, elements);
             endTime = clock();
             seconds = (double)(endTime - startTime) / CLOCKS_PER_SEC;
-            y1 = (16 * previuosValueOfTime[i])*SCALE;
-            x1 = elements / 2/ELEMINPIXEL_B;
-            y2 = 16 * seconds * SCALE;
-            x2 = elements / ELEMINPIXEL_B;
+            y1 = (previuosValueOfTime[i]);
+            x1 = elements / 2;
+            y2 = seconds;
+            x2 = elements ;
 
             switch (i) {
             case 0:
@@ -237,6 +245,8 @@ void shufleIndex(){
 }
 
 
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -248,10 +258,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     calculateA(seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
-    drawChart(this->chartViewA, seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
+    drawChart(this->chartViewA_1, this->chartViewA_2, seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
     calculateB(seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
-    drawChart(this->chartViewB, seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
-    setCentralWidget(chartViewA);
+    drawChart(this->chartViewB_1, this->chartViewB_2, seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
+    ui->horizontalLayout->addWidget(this->chartViewA_1);
+    ui->horizontalLayout->addWidget(this->chartViewA_2);
+    ui->horizontalLayout_4->addWidget(this->chartViewB_1);
+    ui->horizontalLayout_4->addWidget(this->chartViewB_2);
 
 
 }
@@ -267,17 +280,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent *e)
 {
-    if(e->key() == Qt::Key_A){
-        cout << "Left button" <<endl;
-        QWidget *savedWidget = centralWidget();
-        savedWidget->setParent(0);
-        setCentralWidget(this->chartViewB);
-    }
-    if(e->key() == Qt::Key_D){
-        cout << "Right button" <<endl;
-        QWidget* savedWidget = centralWidget();
-        savedWidget->setParent(0);
-        setCentralWidget(this->chartViewA);
-    }
+//    if(e->key() == Qt::Key_A){
+//        cout << "Left button" <<endl;
+////        qDeleteAll(ui->horizontalLayout->findChildren<QWidget *>(QString(), Qt::FindDirectChildrenOnly));
+//        clearLayout(ui->horizontalLayout);
+//        drawChart(this->chartViewA_1, this->chartViewA_2, seriesDirectA, seriesReverseA, seriesStepA, seriesRandomA);
+//        ui->horizontalLayout->addWidget(this->chartViewA_1);
+//        ui->horizontalLayout->addWidget(this->chartViewA_2);
+
+//    }
+//    if(e->key() == Qt::Key_D){
+//        cout << "Right button" <<endl;
+////        ui->horizontalLayout->removeWidget(this->chartViewA_1);
+////        ui->horizontalLayout->removeWidget(this->chartViewA_2);
+//        clearLayout(ui->horizontalLayout);
+//        drawChart(this->chartViewB_1, this->chartViewB_2, seriesDirectB, seriesReverseB, seriesStepB, seriesRandomB);
+//        ui->horizontalLayout->addWidget(this->chartViewB_1);
+//        ui->horizontalLayout->addWidget(this->chartViewB_2);
+
+
+//    }
 }
 
